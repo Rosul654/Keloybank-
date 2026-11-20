@@ -1,0 +1,746 @@
+# KELOYBANK — Игровой онлайн-банк
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KELOYBANK — Онлайн Банк</title>
+  <style>
+    :root {
+      --bg-dark: #0f1115;
+      --bg-card: #181b21;
+      --bg-elevated: #22262f;
+      --primary: #ffdd2d;
+      --primary-hover: #f5cf00;
+      --text-main: #ffffff;
+      --text-muted: #8b949e;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --border-color: #2d323e;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Уведомления */
+    #toast-container {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 90%;
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      font-size: 14px;
+      font-weight: 500;
+      animation: slideDown 0.3s ease;
+    }
+    .toast.error { border-left-color: var(--accent-red); }
+    .toast.success { border-left-color: var(--accent-green); }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Экраны */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      flex: 1;
+    }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Экран входа/регистрации */
+    #auth-screen {
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .auth-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .logo-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .logo-badge {
+      background: var(--primary);
+      color: #000;
+      font-weight: 900;
+      font-size: 20px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-dark);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .auth-tab.active {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      touch-action: manipulation;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover:not(:disabled) { background: #2c313d; }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.25); }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Шапка основного приложения */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #ff9900);
+      color: #000;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .server-status {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+    .status-dot.local { background: var(--primary); }
+    .status-dot.err { background: var(--accent-red); }
+
+    /* Навигация */
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      background: var(--bg-card);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 8px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: 0.2s;
+      touch-action: manipulation;
+    }
+
+    .nav-btn.active {
+      background: var(--bg-elevated);
+      color: var(--primary);
+    }
+
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Банковская карта и Личный кабинет */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .nav-btn {
+        flex-direction: row;
+        justify-content: center;
+        font-size: 15px;
+      }
+    }
+
+    .bank-card {
+      background: linear-gradient(135deg, #232732 0%, #12141a 100%);
+      border: 1px solid #383e4e;
+      border-radius: 22px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    .bank-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(255,221,45,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .bank-card.frozen {
+      filter: grayscale(0.8);
+      border-color: var(--accent-blue);
+    }
+
+    .bank-card.blocked {
+      filter: grayscale(1);
+      border-color: var(--accent-red);
+    }
+
+    .card-status-banner {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .card-balance {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 12px 0;
+    }
+
+    .card-number-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 17px;
+      letter-spacing: 1.5px;
+      color: #d1d5db;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Тапалка */
+    .tap-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+      text-align: center;
+    }
+
+    .coin-btn {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffe866, #e6b800);
+      border: 8px solid #b38f00;
+      box-shadow: 0 12px 30px rgba(255, 221, 45, 0.3), inset 0 4px 10px rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.06s;
+      position: relative;
+      touch-action: manipulation;
+    }
+
+    .coin-btn:active {
+      transform: scale(0.93);
+    }
+
+    .coin-btn span {
+      font-size: 48px;
+      font-weight: 900;
+      color: #3d3100;
+    }
+
+    .coin-btn small {
+      font-size: 13px;
+      font-weight: 700;
+      color: #5c4900;
+    }
+
+    .floating-plus {
+      position: fixed;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--primary);
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+      z-index: 1000;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+    }
+
+    /* Инвестиции */
+    .stock-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stock-item {
+      background: var(--bg-elevated);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .stock-item.selected {
+      border-color: var(--primary);
+      background: rgba(255, 221, 45, 0.08);
+    }
+
+    .stock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .stock-ticker {
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .stock-change {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .up { color: var(--accent-green); background: rgba(16,185,129,0.15); }
+    .down { color: var(--accent-red); background: rgba(239,68,68,0.15); }
+
+    .chart-wrapper {
+      width: 100%;
+      height: 220px;
+      background: var(--bg-dark);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    canvas#stockChart {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Списки пользователей и истории */
+    .list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      gap: 8px;
+    }
+    .list-row:last-child { border-bottom: none; }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Модальные окна */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-box">
+      <div class="logo-header">
+        <div class="logo-badge">K</div>
+        <h1 style="font-size: 24px; font-weight: 800;">KELOYBANK</h1>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-reg-btn">Регистрация</div>
+        <div class="auth-tab" id="tab-login-btn">Вход / Админ</div>
+      </div>
+
+      <div id="auth-form-box">
+        <div class="form-group">
+          <label>Имя пользователя (Никнейм)</label>
+          <input type="text" id="auth-username" class="input-field" placeholder="Например: Ivan_Pro" maxlength="20" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label id="pin-label">Придумайте 4-значный PIN-код</label>
+          <input type="password" id="auth-pin" class="input-field" placeholder="4 цифры (например: 1234)" inputmode="numeric" maxlength="10" autocomplete="off">
+        </div>
+
+        <button type="button" class="btn btn-primary" id="auth-submit-btn">Создать карту</button>
+      </div>
+
+      <div style="margin-top: 16px; text-align: center;">
+        <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 10px;" id="open-fb-btn">
+          <span class="status-dot" id="auth-sync-dot" style="display:inline-block;"></span>
+          <span id="auth-sync-label">Сервер Firebase готов</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОСНОВНОЙ ИНТЕРФЕЙС БАНКА -->
+  <div id="app-screen" class="screen">
+    <header class="topbar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="logo-badge" style="padding: 4px 10px; font-size: 16px;">K</div>
+        <div>
+          <div style="font-weight: 800; font-size: 16px;">KELOYBANK</div>
+          <div class="server-status" id="header-sync-btn">
+            <span class="status-dot" id="sync-dot"></span>
+            <span id="sync-text">Firebase Онлайн</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="user-pill">
+          <div class="avatar" id="header-avatar">U</div>
+          <span style="font-weight: 600; font-size: 14px;" id="header-username">User</span>
+        </div>
+        <button type="button" class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 13px;" id="user-logout-btn">Выйти</button>
+      </div>
+    </header>
+
+    <!-- НАВИГАЦИЯ -->
+    <nav class="nav-tabs">
+      <button type="button" class="nav-btn active" data-tab="cabinet">💳 Кабинет</button>
+      <button type="button" class="nav-btn" data-tab="transfers">💸 Переводы</button>
+      <button type="button" class="nav-btn" data-tab="earn">💰 Заработок</button>
+      <button type="button" class="nav-btn" data-tab="history">📜 История</button>
+    </nav>
+
+    <!-- ВКЛАДКА 1: ЛИЧНЫЙ КАБИНЕТ -->
+    <div id="tab-cabinet" class="tab-pane active">
+      <div class="grid-2">
+        <div>
+          <div class="bank-card" id="user-bank-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 800; letter-spacing: 1px; color: var(--primary);">KELOY BLACK</span>
+              <span id="card-status-badge" class="card-status-banner" style="display: none;"></span>
+            </div>
+
+            <div>
+              <div style="font-size: 12px; color: var(--text-muted);">Доступный баланс</div>
+              <div class="card-balance" id="ui-balance">0.00 ₽</div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Номер карты (нажмите чтобы скопировать)</div>
+              <div class="card-number-row" id="copy-card-btn">
+                <span id="ui-card-number">0000 0000 0000 0000</span>
+                <span style="font-size: 14px;">📋</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Информация об аккаунте</div>
+          <div class="list-row">
+            <span style="color: var(--text-muted);">Владелец карты</span>
+            <strong id="info-name">—</strong>
+          </div>
+          <div class="list-row">
+            <span style="color: var(--text-muted);">Статус карты</span>
+            <strong id="info-status" style="color: var(--accent-green);">Активна</strong>
+          </div>
+          <div class="list-row">
+            <span style="color: var(--text-muted);">Стоимость портфеля</span>
+            <strong id="info-portfolio-val">0.00 ₽</strong>
+          </div>
+          <div class="list-row">
+            <span style="color: var(--text-muted);">Всего тапов сделано</span>
+            <strong id="info-taps">0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ВКЛАДКА 2: ПЕРЕВОДЫ -->
+    <div id="tab-transfers" class="tab-pane">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Перевод клиенту KELOYBANK</div>
+          <div>
+            <div class="form-group">
+              <label>Номер карты получателя (16 цифр) или Никнейм</label>
+              <input type="text" id="transfer-target" class="input-field" placeholder="Например: 4276... или Ivan">
+              <div id="recipient-preview" style="font-size: 13px; margin-top: 6px; color: var(--accent-green); min-height: 18px;"></div>
+            </div>
+
+            <div class="form-group">
+              <label>Сумма перевода (₽)</label>
+              <input type="number" id="transfer-amount" class="input-field" step="0.01" min="0.01" placeholder="0.00">
+            </div>
+
+            <button type="button" class="btn btn-primary" id="transfer-submit-btn">Перевести средства</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Другие клиенты банка</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Нажмите на клиента, чтобы выбрать для перевода</div>
+          <div id="other-users-list" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ВКЛАДКА 3: ЗАРАБОТОК (ТАПАЛКА + ИНВЕСТИЦИИ) -->
+    <div id="tab-earn" class="tab-pane">
+      <div class="auth-tabs" style="max-width: 400px; margin: 0 auto 20px;">
+        <div class="auth-tab active" id="subtab-tap-btn">👆 Тапалка</div>
+        <div class="auth-tab" id="subtab-invest-btn">📈 Инвестиции</div>
+      </div>
+
+      <!-- РЕЖИМ ТАПАЛКИ -->
+      <div id="earn-tap-section" class="panel">
+        <div class="tap-zone">
+          <div style="font-size: 14px; color: var(--te
