@@ -4,7 +4,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KELOYBANK — Онлайн Банк</title>
   <style>
     :root {
@@ -30,13 +30,27 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
       background-color: var(--bg-dark);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    button, [role="button"], .auth-tab, .nav-btn, .coin-btn, .stock-item, .card-number-row, .server-status, .clickable-row {
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    input, textarea, select {
+      -webkit-user-select: auto;
+      user-select: auto;
+      touch-action: manipulation;
     }
 
     /* Уведомления */
@@ -133,14 +147,12 @@
     .auth-tab {
       flex: 1;
       text-align: center;
-      padding: 10px;
+      padding: 12px 10px;
       border-radius: 8px;
-      cursor: pointer;
       font-size: 14px;
       font-weight: 600;
       color: var(--text-muted);
       transition: 0.2s;
-      user-select: none;
     }
 
     .auth-tab.active {
@@ -177,18 +189,17 @@
 
     .btn {
       width: 100%;
-      padding: 15px;
+      min-height: 48px;
+      padding: 14px 16px;
       border: none;
       border-radius: 12px;
       font-size: 16px;
       font-weight: 700;
-      cursor: pointer;
       transition: 0.15s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      touch-action: manipulation;
     }
 
     .btn:disabled {
@@ -263,7 +274,7 @@
       align-items: center;
       gap: 6px;
       color: var(--text-muted);
-      cursor: pointer;
+      padding: 4px 0;
     }
 
     .status-dot {
@@ -292,16 +303,16 @@
       border: none;
       color: var(--text-muted);
       padding: 12px 8px;
+      min-height: 48px;
       border-radius: 12px;
       font-size: 14px;
       font-weight: 600;
-      cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       transition: 0.2s;
-      touch-action: manipulation;
     }
 
     .nav-btn.active {
@@ -402,9 +413,8 @@
       letter-spacing: 1.5px;
       color: #d1d5db;
       background: rgba(0,0,0,0.3);
-      padding: 10px 14px;
+      padding: 12px 14px;
       border-radius: 10px;
-      cursor: pointer;
     }
 
     .panel {
@@ -435,8 +445,8 @@
     }
 
     .coin-btn {
-      width: 190px;
-      height: 190px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #ffe866, #e6b800);
       border: 8px solid #b38f00;
@@ -445,27 +455,28 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      user-select: none;
       transition: transform 0.06s;
       position: relative;
-      touch-action: manipulation;
+      touch-action: none;
     }
 
+    .coin-btn.pressed,
     .coin-btn:active {
-      transform: scale(0.93);
+      transform: scale(0.92);
     }
 
     .coin-btn span {
-      font-size: 48px;
+      font-size: 52px;
       font-weight: 900;
       color: #3d3100;
+      pointer-events: none;
     }
 
     .coin-btn small {
       font-size: 13px;
       font-weight: 700;
       color: #5c4900;
+      pointer-events: none;
     }
 
     .floating-plus {
@@ -496,7 +507,6 @@
       border: 2px solid transparent;
       border-radius: 12px;
       padding: 12px;
-      cursor: pointer;
       transition: 0.2s;
     }
 
@@ -554,10 +564,17 @@
     .list-row:last-child { border-bottom: none; }
 
     .badge {
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
+    }
+
+    .adm-btn, .adm-st-btn {
+      min-height: 40px;
+      padding: 8px 12px;
+      width: auto;
+      font-size: 13px;
     }
 
     /* Модальные окна */
@@ -599,8 +616,8 @@
       </div>
 
       <div class="auth-tabs">
-        <div class="auth-tab active" id="tab-reg-btn">Регистрация</div>
-        <div class="auth-tab" id="tab-login-btn">Вход / Админ</div>
+        <div class="auth-tab active" role="button" tabindex="0" id="tab-reg-btn">Регистрация</div>
+        <div class="auth-tab" role="button" tabindex="0" id="tab-login-btn">Вход / Админ</div>
       </div>
 
       <div id="auth-form-box">
@@ -633,7 +650,7 @@
         <div class="logo-badge" style="padding: 4px 10px; font-size: 16px;">K</div>
         <div>
           <div style="font-weight: 800; font-size: 16px;">KELOYBANK</div>
-          <div class="server-status" id="header-sync-btn">
+          <div class="server-status" role="button" tabindex="0" id="header-sync-btn">
             <span class="status-dot" id="sync-dot"></span>
             <span id="sync-text">Firebase Онлайн</span>
           </div>
@@ -645,7 +662,7 @@
           <div class="avatar" id="header-avatar">U</div>
           <span style="font-weight: 600; font-size: 14px;" id="header-username">User</span>
         </div>
-        <button type="button" class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 13px;" id="user-logout-btn">Выйти</button>
+        <button type="button" class="btn btn-secondary" style="width: auto; min-height: 40px; padding: 8px 14px; font-size: 13px;" id="user-logout-btn">Выйти</button>
       </div>
     </header>
 
@@ -674,7 +691,7 @@
 
             <div>
               <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Номер карты (нажмите чтобы скопировать)</div>
-              <div class="card-number-row" id="copy-card-btn">
+              <div class="card-number-row" role="button" tabindex="0" id="copy-card-btn">
                 <span id="ui-card-number">0000 0000 0000 0000</span>
                 <span style="font-size: 14px;">📋</span>
               </div>
@@ -729,18 +746,4 @@
           <div class="panel-title">Другие клиенты банка</div>
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Нажмите на клиента, чтобы выбрать для перевода</div>
           <div id="other-users-list" style="max-height: 300px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ВКЛАДКА 3: ЗАРАБОТОК (ТАПАЛКА + ИНВЕСТИЦИИ) -->
-    <div id="tab-earn" class="tab-pane">
-      <div class="auth-tabs" style="max-width: 400px; margin: 0 auto 20px;">
-        <div class="auth-tab active" id="subtab-tap-btn">👆 Тапалка</div>
-        <div class="auth-tab" id="subtab-invest-btn">📈 Инвестиции</div>
-      </div>
-
-      <!-- РЕЖИМ ТАПАЛКИ -->
-      <div id="earn-tap-section" class="panel">
-        <div class="tap-zone">
-          <div style="font-size: 14px; color: var(--te
+   
